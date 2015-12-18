@@ -1,4 +1,4 @@
-import pyfolio as pf
+#import pyfolio as pf
 import pandas as pd
 import numpy as np
 from yahoo_finance import Share
@@ -54,7 +54,7 @@ def get_dfs(strat):
     data['dailyrets'] = get_dailyret(data.Close)
     return data
 
-def sweetspotuser(ticker):
+def sweetspotuser(ticker, tickdict):
     cs=[]
     eqs=[]
     data = tickdict[ticker]
@@ -69,17 +69,19 @@ def sweetspotuser(ticker):
     #plot(cs,eqs)
     #show()
     data  = tickdict[ticker].tail(250)
-    c = cs[argmax(eqs)]
+    c = cs[np.argmax(eqs)]
     data['stratret'] = data.apply(get_stratret,args = (c,), axis = 1)
     eqcurve = np.cumprod(3*data.stratret+1)
-    return(eqcurve[-2])
-
+    return eqcurve[-2], data['stratret']
 
 
 
 
 
 def main():
+    import get_symbols
+    sdf = get_symbols.main()
+    sdf = sdf[:2]
     tickdict = {}
     numstrats = 0
     for ticker in sdf:
@@ -94,8 +96,44 @@ def main():
             print('failed')
             
     portf = []
+    porteq = pd.Series()
+    numstrats = 0
+    def dd(pnl):
+        max_accum = np.maximum.accumulate(pnl)
+        max_curr_df = np.subtract(max_accum,pnl)
+        #max_drawdown = np.amax(max_curr_df)
+        return max(max_curr_df)
+
+
     for key in tickdict:
-        r = sweetspotuser(key)
-        print(r)
+        print('')
+        print(numstrats)
+        numstrats+=1
+        print('symbol: %s: ' % key)
+
+        try:
+            r, e = sweetspotuser(key, tickdict)
+        except:
+            pass
+        print('return: %s' % r)
         portf.append(r)
-        print(np.mean(portf))
+        print('portfolio ret: %s' % np.mean(portf))
+
+        if numstrats ==1:
+            porteq = e
+        else:
+            porteq = porteq+e
+        print(porteq.head())
+        print(e.head())
+        print(np.prod(3*e+1))
+        print(np.prod(3*porteq+1))
+        portcurve = np.cumprod(3*porteq+1)
+        print(portcurve[-2])
+        print('drawdown: %s' % dd(np.cumprod(3*e+1)))
+        print('portfolio dd: %s' % dd(portcurve))
+        
+
+
+
+if __name__ == "__main__":
+    main()
