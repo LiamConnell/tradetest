@@ -7,6 +7,7 @@ import matplotlib
 import datetime
 from datetime import datetime
 from sklearn.linear_model import LinearRegression
+import matplotlib
 
 
 def get_dailyret(ser):
@@ -44,7 +45,7 @@ def get_stratret(row, threshold=11):
     
     
 def get_dfs(strat):
-    data = pd.DataFrame(Share(strat).get_historical('2010-05-02', '2014-12-12'))
+    data = pd.DataFrame(Share(strat).get_historical('2010-05-02', '2015-12-12'))
     print('fetched data')
     data.Date = [datetime.strptime(data.Date.iloc[i], '%Y-%m-%d') for i in data.index]
     data.index = data.Date
@@ -70,7 +71,7 @@ def sweetspotuser(ticker, tickdict):
     #plot(cs,eqs)
     #show()
     data  = tickdict[ticker].tail(250)
-    if max(eqs)<1.1:
+    if max(eqs)<1.5:
         print('nein!')
         return 
     c = cs[np.argmax(eqs)]
@@ -86,7 +87,7 @@ def main1():
     import get_symbols
     sdf = get_symbols.main()
     rs =[]
-    for i in range(200):
+    for i in range(100):
         rs.append(sdf[int(random.random()*len(sdf))])
     sdf = rs
     tickdict = {}
@@ -104,7 +105,7 @@ def main1():
             
     return sdf, tickdict
 
-def main2(tickdict):
+def main2(tickdict, plot=True):
     def dd(pnl):
         max_accum = np.maximum.accumulate(pnl)
         max_curr_df = np.subtract(max_accum,pnl)
@@ -151,8 +152,15 @@ def main2(tickdict):
         print('avg inv ret: %s' % np.mean(portf))
         iromad = np.mean(portf)-1/np.mean(dds)
         print('avg indv romad: %s' %iromad)
+        
+        if plot:
+            plot(np.cumprod(3*e+1))
+            show()
+            plot(portcurve)
+            show()
+        
 
 
 if __name__ == "__main__":
     sdf, tickdict = main1()
-    main2(tickdict)
+    main2(tickdict, plot=False)
