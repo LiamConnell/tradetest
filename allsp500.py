@@ -1,4 +1,5 @@
 #import pyfolio as pf
+import random
 import pandas as pd
 import numpy as np
 from yahoo_finance import Share
@@ -43,7 +44,7 @@ def get_stratret(row, threshold=11):
     
     
 def get_dfs(strat):
-    data = pd.DataFrame(Share(strat).get_historical('2010-05-02', '2015-12-12'))
+    data = pd.DataFrame(Share(strat).get_historical('2010-05-02', '2014-12-12'))
     print('fetched data')
     data.Date = [datetime.strptime(data.Date.iloc[i], '%Y-%m-%d') for i in data.index]
     data.index = data.Date
@@ -69,6 +70,9 @@ def sweetspotuser(ticker, tickdict):
     #plot(cs,eqs)
     #show()
     data  = tickdict[ticker].tail(250)
+    if max(eqs)<1.1:
+        print('nein!')
+        return 
     c = cs[np.argmax(eqs)]
     data['stratret'] = data.apply(get_stratret,args = (c,), axis = 1)
     eqcurve = np.cumprod(3*data.stratret+1)
@@ -78,10 +82,13 @@ def sweetspotuser(ticker, tickdict):
 
 
 
-def main():
+def main1():
     import get_symbols
     sdf = get_symbols.main()
-    sdf = sdf[:2]
+    rs =[]
+    for i in range(200):
+        rs.append(sdf[int(random.random()*len(sdf))])
+    sdf = rs
     tickdict = {}
     numstrats = 0
     for ticker in sdf:
@@ -95,16 +102,18 @@ def main():
         except:
             print('failed')
             
-    portf = []
-    porteq = pd.Series()
-    numstrats = 0
+    return sdf, tickdict
+
+def main2(tickdict):
     def dd(pnl):
         max_accum = np.maximum.accumulate(pnl)
         max_curr_df = np.subtract(max_accum,pnl)
         #max_drawdown = np.amax(max_curr_df)
         return max(max_curr_df)
-
-
+    portf = []
+    porteq = pd.Series()
+    numstrats = 0
+    dds=[]
     for key in tickdict:
         print('')
         print(numstrats)
@@ -114,7 +123,7 @@ def main():
         try:
             r, e = sweetspotuser(key, tickdict)
         except:
-            pass
+            continue
         print('return: %s' % r)
         portf.append(r)
         print('portfolio ret: %s' % np.mean(portf))
@@ -122,18 +131,28 @@ def main():
         if numstrats ==1:
             porteq = e
         else:
-            porteq = porteq+e
-        print(porteq.head())
-        print(e.head())
+            porteq =((numstrats-1)* porteq+e)/numstrats
         print(np.prod(3*e+1))
         print(np.prod(3*porteq+1))
         portcurve = np.cumprod(3*porteq+1)
         print(portcurve[-2])
-        print('drawdown: %s' % dd(np.cumprod(3*e+1)))
-        print('portfolio dd: %s' % dd(portcurve))
-        
+        dd1 = dd(np.cumprod(3*e+1))
+        dds.append(dd1)
+        pvol = np.std(3*porteq)*15.8745
+        print(pvol)
+        psharpe = int(portcurve[-2])-1/pvol
+        print('port sharpe: %s' % psharpe)
 
+        print('indv drawdown: %s' % dd1)
+        print('portfolio dd: %s' % dd(portcurve))
+        promad = portcurve[-2]-1/dd(portcurve)
+        print('portf romad: %s' %promad)
+        print('avg indv dd: %s' % np.mean(dds))
+        print('avg inv ret: %s' % np.mean(portf))
+        iromad = np.mean(portf)-1/np.mean(dds)
+        print('avg indv romad: %s' %iromad)
 
 
 if __name__ == "__main__":
-    main()
+    sdf, tickdict = main1()
+    main2(tickdict)
