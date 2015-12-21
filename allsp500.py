@@ -1,4 +1,5 @@
 #import pyfolio as pf
+
 import random
 import pandas as pd
 import numpy as np
@@ -153,11 +154,11 @@ def main2(tickdict, plot=True):
         iromad = np.mean(portf)-1/np.mean(dds)
         print('avg indv romad: %s' %iromad)
         
-        if plot:
-            plot(np.cumprod(3*e+1))
-            show()
-            plot(portcurve)
-            show()
+        #if plot==True:
+        matplotlib.pyplot.plot(np.cumprod(3*e+1))
+        matplotlib.pyplot.show()
+        matplotlib.pyplot.plot(portcurve)
+        matplotlib.pyplot.show()
         
 
 
