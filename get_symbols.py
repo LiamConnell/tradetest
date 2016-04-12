@@ -15,7 +15,7 @@ def scrape_list(site):
     hdr = {'User-Agent': 'Mozilla/5.0'}
     req = Request(site, headers=hdr)
     page = urlopen(req)
-    soup = BeautifulSoup(page)
+    soup = BeautifulSoup(page, "lxml")
 
     table = soup.find('table', {'class': 'wikitable sortable'})
     sector_tickers = dict()

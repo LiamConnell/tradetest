@@ -1,0 +1,2 @@
+rets	annret	annrtnz	stdz	stdev	sharpez	sharpe	sharpenz
+0.117	0.118	0.148	0.023	0.025	5.113	4.631	5.825
